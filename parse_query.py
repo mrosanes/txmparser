@@ -69,7 +69,7 @@ def main():
     """
 
     parser = ParserTXMScript()
-    collected_images = parser.parse_script("many.txt")
+    collected_images = parser.parse_script("enescan.txt")
     #prettyprinter = pprint.PrettyPrinter(indent=4)
     #prettyprinter.pprint(collected_images)
 
@@ -78,13 +78,19 @@ def main():
     db.purge()
     db.insert_multiple(collected_images)
     Files = Query()
-    found_files = db.search((Files.energy == 500) & (Files.FF == False) &
-                            (Files.angle > -10) & (Files.angle < 10))
+    #found_files = db.search((Files.energy == 500))
+    #found_files = db.search((Files.energy == 425) & (Files.FF == True) &
+    #                        (Files.angle > -10) & (Files.angle <= 0))
+    #found_files = db.search((Files.repetition == 2) & (Files.FF == False) &
+    #                        (Files.date == 20171113))
+    found_files = db.search((Files.FF == True) &
+                            (Files.energy > 350) & (Files.energy <= 450)) 
+    #& (Files.angle > -10) & (Files.angle <= 0))
     #print(found_files)
 
-    
     from operator import itemgetter
-    result = sorted(found_files, key=itemgetter('angle'), reverse=True)
+    # Used to organize numbers in increasing or decreasing order
+    result = sorted(found_files, key=itemgetter('energy'), reverse=False)
     
     for entry in result:
         print(entry["filename"])
