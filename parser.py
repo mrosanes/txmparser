@@ -11,6 +11,8 @@ class ParserTXMScript:
     def __init__(self):
         self.collected_files = []
         self.parameters = {}
+        self.filename = None
+        self.extension = None        
         self.date = None
         self.sample = "sample0"
         self.energy = -1
@@ -19,44 +21,51 @@ class ParserTXMScript:
         self.FF = False
         self.repetition = 0
         self.first_repetition = True
-        self.extension = None
-        self.filename = None
+        self.subfolder = None
         
+    def reset_repetition(self):
+        self.first_repetition = True
+        self.repetition = 0    
+    
     def parse_energy(self, line):
         # If a parameter is modified, the repetitions must be reset
-        self.first_repetition = True
-        self.repetition = 0
+        self.reset_repetition()
         word_list = line.split()
         self.energy = round(float(word_list[-1]), 1)
         self.parameters['energy'] = self.energy
                 
     def parse_angle(self, line):
         # If a parameter is modified, the repetitions must be reset
-        self.first_repetition = True
-        self.repetition = 0
+        self.reset_repetition()
         word_list = line.split()
         self.angle = round(float(word_list[-1]), 1)
         self.parameters['angle'] = self.angle
         
     def parse_zpz(self, line):
         # If a parameter is modified, the repetitions must be reset
-        self.first_repetition = True
-        self.repetition = 0
+        self.reset_repetition()
         word_list = line.split()
         self.zpz = round(float(word_list[-1]), 1)
         self.parameters['zpz'] = self.zpz
-    
+
+    def parse_subfolder(self, line):
+        """Subfolder where the raw data file should be located"""
+        # The repetition must not be reset in this case
+        word_list = line.split()
+        self.subfolder = int(round(word_list[-1]))
+        self.parameters['subfolder'] = self.subfolder
+        
     def is_FF(self):
         if "_FF" in self.filename:
             # If a parameter is modified, the repetitions must be reset
             if self.FF == False:
-                self.first_repetition = True
+                self.reset_repetition()
             self.FF = True
             self.parameters['FF'] = self.FF
         else:
             # If a parameter is modified, the repetitions must be reset
             if self.FF == True:
-                self.first_repetition = True
+                self.reset_repetition()
             self.FF = False
             self.parameters['FF'] = self.FF
         
@@ -96,41 +105,37 @@ class ParserTXMScript:
         if self.first_repetition == False:
             self.repetition += 1
         self.parameters['repetition'] = self.repetition
-        
+
         word_list = line.split()
         self.filename = word_list[-1]
         self.parameters['filename'] = self.filename
-    
+        self.first_repetition = False
+        
         self.is_FF()
         self.parse_extension()
         self.parse_sample_and_date()
 
         store_parameters = copy.deepcopy(self.parameters)
-        #print(store_parameters)
         self.collected_files.append(store_parameters)
-        self.first_repetition = False
+
     
     def parse_script(self, txm_txt_script):
         f = open(txm_txt_script, 'r')
-        
         lines = f.readlines()
         for i, line in enumerate(lines):
             s1 = "moveto energy"
             s2 = "moveto ZPz"
             s3 = "moveto T"
-
             if "moveto energy" in line:
                 self.parse_energy(line)
-                
             if "moveto T" in line:
                 self.parse_angle(line)
-                
             if "moveto ZPz" in line:
                 self.parse_zpz(line)
-                
+            if "moveto folder" in line:
+                self.parse_subfolder
             if "collect" in line:
-                self.parse_collect(line)
-                
+                self.parse_collect(line)    
         return self.collected_files
                 
         
