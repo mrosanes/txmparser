@@ -70,7 +70,6 @@ def main():
 
     parser = ParserTXMScript()
     collected_images = parser.parse_script("many.txt")
-    
     #prettyprinter = pprint.PrettyPrinter(indent=4)
     #prettyprinter.pprint(collected_images)
 
@@ -80,7 +79,7 @@ def main():
     db.insert_multiple(collected_images)
     Files = Query()
     found_files = db.search((Files.energy == 500) & (Files.FF == False) &
-                            (Files.angle > -4) & (Files.angle < 4))
+                            (Files.angle > -10) & (Files.angle < 10))
     #print(found_files)
 
     
@@ -88,9 +87,7 @@ def main():
     result = sorted(found_files, key=itemgetter('angle'), reverse=True)
     
     for entry in result:
-        #print(entry)
-        print(entry['filename'])
-
+        print(entry["filename"])
     db.close()
     
     #with open('db.json') as data_file:
