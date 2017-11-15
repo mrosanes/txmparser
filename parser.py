@@ -25,6 +25,7 @@ import os
 import copy
 import pprint
 from shutil import copyfile
+from glob import glob
 from tinydb import TinyDB
 
 
@@ -157,7 +158,7 @@ class ParserTXMScript(object):
         return self.collected_files
                 
 
-def getDB(db_full_path, txm_txt_script):
+def _getDB(db_full_path, txm_txt_script):
     if os.path.isfile(db_full_path):
         db = TinyDB(db_full_path)
     else:
@@ -169,24 +170,19 @@ def getDB(db_full_path, txm_txt_script):
         
     return db
 
-def search(txm_txt_script, query_impl, db_name='index.json', orderby=None):
-    root_path = os.path.dirname(txm_txt_script)
-    if not os.path.isfile(txm_txt_script):
-        raise Exception('txt file does not exist in {0}'.format(root_path))
-    db_full_path = os.path.join(root_path, db_name)    
-    db = getDB(db_full_path, txm_txt_script)
-    query_output = db.search(query_impl)    
-    db.close()
-    
-    # TODO orderby
-    return query_output
+
+def _getPathsFromRoot(root_path, query_output):
+    files = []
+    for entry in query_output:
+        for dir,_,_ in os.walk(root_path):
+            files.extend(glob(os.path.join(dir, entry["filename"])))
+        # Add fake files    
+        #if len(files) == 0 or entry["filename"] in files[-1]:
+        #    files.append(os.path.join(root_path, entry["filename"]))
+    return files
 
 
-def getPathsFromRoot(root_path, query_output):
-    pass
-
-
-def getPathsFromQuery(root_path, query_output):
+def _getPathsFromQuery(root_path, query_output):
     files = []
     for entry in query_output:
         filename = entry["filename"]
@@ -194,6 +190,20 @@ def getPathsFromQuery(root_path, query_output):
         complete_file = os.path.join(root_path, subfolder, filename)
         files.append(complete_file)
     return files
+
+
+def search(txm_txt_script, query_impl, db_name='index.json', orderby=None):
+    root_path = os.path.dirname(os.path.abspath(txm_txt_script))
+    if not os.path.isfile(txm_txt_script):
+        raise Exception('txt file does not exist in {0}'.format(root_path))
+    
+    db_full_path = os.path.join(root_path, db_name)    
+    db = _getDB(db_full_path, txm_txt_script)
+    query_output = db.search(query_impl)    
+    db.close()
+    
+    # TODO orderby
+    return query_output
 
 
 def getFilePaths(txm_txt_script, query_impl, root_path=None, 
@@ -208,7 +218,7 @@ def getFilePaths(txm_txt_script, query_impl, root_path=None,
             txm_script_basename = os.path.basename(txm_txt_script)
             txm_txt_script = os.path.join(root_path, txm_script_basename)
         except:
-            pass
+            raise Exception("File txt already exists in root path")
     else:
         root_path = os.path.dirname(os.path.abspath(txm_txt_script))
     
@@ -217,9 +227,9 @@ def getFilePaths(txm_txt_script, query_impl, root_path=None,
     
     # Get getFilePaths
     if use_subfolders:
-        files = getPathsFromQuery(root_path, query_output)
+        files = _getPathsFromQuery(root_path, query_output)
     else:
-        files = getPathsFromRoot(root_path, query_output)
+        files = _getPathsFromRoot(root_path, query_output)
         
     # Filter existing files
     if only_existing:
@@ -228,10 +238,9 @@ def getFilePaths(txm_txt_script, query_impl, root_path=None,
             if os.path.isfile(complete_file):
                 only_exisiting_files.append(complete_file)
         files = only_exisiting_files
-            #files = map(os.path.isfile(files), files)
     return files
-        
-    
+
+
 def main():
 
     parser = ParserTXMScript()
