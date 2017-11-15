@@ -24,10 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import copy
 import pprint
+from shutil import copyfile
 from tinydb import TinyDB
 
 
-class ParserTXMScript:
+class ParserTXMScript(object):
 
     def __init__(self):
         self.collected_files = []
@@ -156,35 +157,81 @@ class ParserTXMScript:
         return self.collected_files
                 
 
-class FileIndexer(object):
-
-    def __init__(self):
-        self.parser = ParserTXMScript()
-        self.db_file_index = None
-
-    def fill_db(self, txm_script):
-        self.db_file_index = TinyDB('index.json')
-        self.db_file_index.purge()
-        collected_images = self.parser.parse_script(txm_script)
-        self.db_file_index.insert_multiple(collected_images)
-        return self.db_file_index
-
-    def close_db(self):
-        self.db_file_index.close()
-    
-    def getFilePaths(self, root_folder, query, check_file_existence = True):
-        files = []
-        for entry in query:
-            filename = entry["filename"]
-            subfolder = entry["subfolder"]
-            complete_file = root_folder + '/' + subfolder + '/' +  filename                
-            if (check_file_existence and os.path.isfile(complete_file)):
-                files.append(complete_file)
-            elif not check_file_existence:
-                files.append(complete_file)
-        return files
+def getDB(db_full_path, txm_txt_script):
+    if os.path.isfile(db_full_path):
+        db = TinyDB(db_full_path)
+    else:
+        db = TinyDB(db_full_path)
+        db.purge()
+        parser = ParserTXMScript()
+        collected_images = parser.parse_script(txm_txt_script)
+        db.insert_multiple(collected_images)
         
+    return db
 
+def search(txm_txt_script, query_impl, db_name='index.json', orderby=None):
+    root_path = os.path.dirname(txm_txt_script)
+    if not os.path.isfile(txm_txt_script):
+        raise Exception('txt file does not exist in {0}'.format(root_path))
+    db_full_path = os.path.join(root_path, db_name)    
+    db = getDB(db_full_path, txm_txt_script)
+    query_output = db.search(query_impl)    
+    db.close()
+    
+    # TODO orderby
+    return query_output
+
+
+def getPathsFromRoot(root_path, query_output):
+    pass
+
+
+def getPathsFromQuery(root_path, query_output):
+    files = []
+    for entry in query_output:
+        filename = entry["filename"]
+        subfolder = entry["subfolder"]
+        complete_file = os.path.join(root_path, subfolder, filename)
+        files.append(complete_file)
+    return files
+
+
+def getFilePaths(txm_txt_script, query_impl, root_path=None, 
+                 only_existing=True, use_subfolders=True):
+    # root_path is the super folder where raw data xrm files are located
+    if root_path:
+        # copy txm_txt_script to root_path
+        try:
+            fname_txm_script = os.path.basename(txm_txt_script)
+            dst = os.path.join(root_path, fname_txm_script) 
+            copyfile(txm_txt_script, dst)
+            txm_script_basename = os.path.basename(txm_txt_script)
+            txm_txt_script = os.path.join(root_path, txm_script_basename)
+        except:
+            pass
+    else:
+        root_path = os.path.dirname(os.path.abspath(txm_txt_script))
+    
+    # Search
+    query_output = search(txm_txt_script, query_impl)
+    
+    # Get getFilePaths
+    if use_subfolders:
+        files = getPathsFromQuery(root_path, query_output)
+    else:
+        files = getPathsFromRoot(root_path, query_output)
+        
+    # Filter existing files
+    if only_existing:
+        only_exisiting_files = []
+        for complete_file in files:
+            if os.path.isfile(complete_file):
+                only_exisiting_files.append(complete_file)
+        files = only_exisiting_files
+            #files = map(os.path.isfile(files), files)
+    return files
+        
+    
 def main():
 
     parser = ParserTXMScript()
