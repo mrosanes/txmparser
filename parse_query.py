@@ -76,7 +76,7 @@ def main():
 
     Files = Query()
     query_impl = ((Files.energy > 400) & (Files.energy <= 500) & (Files.angle > -15) & (Files.angle <= 100))
-    files = getFilePaths("many_folder.txt", query_impl, only_existing=True) #, root_path="/home/mrosanes/PycharmProjects/txmparser/rootfolder")
+    files = getFilePaths("many_folder.txt", query_impl, only_existing=True, use_subfolders=True)#, root_path="/home/mrosanes/PycharmProjects/txmparser/rootfolder")
     for i in files:
         print(i)
         print("\n")
