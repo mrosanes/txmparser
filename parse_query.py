@@ -20,7 +20,7 @@
 
 
 from tinydb import TinyDB, Query, where
-from parser import ParserTXMScript
+from parser import ParserTXMScript, FileIndexer
 
 def main():
     # Dictionaries done thanks to the parsing of the txt microscope script:
@@ -69,10 +69,11 @@ def main():
     """
 
     parser = ParserTXMScript()
-    collected_images = parser.parse_script("enescan.txt")
+    indexer = FileIndexer()
+    
+    collected_images = parser.parse_script("many_folder.txt")
     #prettyprinter = pprint.PrettyPrinter(indent=4)
     #prettyprinter.pprint(collected_images)
-
 
     db = TinyDB('db.json') 
     db.purge()
@@ -83,17 +84,59 @@ def main():
     #                        (Files.angle > -10) & (Files.angle <= 0))
     #found_files = db.search((Files.repetition == 2) & (Files.FF == False) &
     #                        (Files.date == 20171113))
-    found_files = db.search((Files.FF == True) &
-                            (Files.energy > 350) & (Files.energy <= 450)) 
+    #found_files = db.search((Files.FF == True) &
+    #                        (Files.energy > 350) & (Files.energy <= 450)) 
+    
+    found_files = db.search((Files.energy > 400) & (Files.energy <= 500) &
+                            (Files.angle > -15) & (Files.angle <= 100))
     #& (Files.angle > -10) & (Files.angle <= 0))
     #print(found_files)
+
+    #print(found_files)
+
 
     from operator import itemgetter
     # Used to organize numbers in increasing or decreasing order
     result = sorted(found_files, key=itemgetter('energy'), reverse=False)
     
+    #print(result)
+        
     for entry in result:
-        print(entry["filename"])
+        pass
+        #print(entry["filename"])
+        #print(entry["subfolder"])
+
+    
+
+    
+    root_folder = "/home/mrosanes/PycharmProjects/txmparser/rootfolder"
+    query = result
+    #print(query)
+    
+    file_paths = indexer.getFilePaths(root_folder, query, False) #False) #True#)   
+    for file_path in file_paths:
+        print("\n")
+        print(file_path)
+    
+    found2 = db.search(Files.zpz < 1)
+    #print(found2)
+    
+    
+    found3 = db.search(Files.zp.exists())
+    #print(found3)
+    
+    res2 = sorted(found2, key=itemgetter('zpz'), reverse=False)
+    zpz_all_files = [] 
+    for entry in res2:
+        pass
+        #try:
+            
+        #print(entry["zpz"])
+    
+    
+    for entry in result:
+        pass
+        #print(entry["filename"])
     db.close()
     
     #with open('db.json') as data_file:
