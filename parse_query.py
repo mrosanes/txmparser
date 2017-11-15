@@ -20,7 +20,8 @@
 
 
 from tinydb import TinyDB, Query, where
-from parser import ParserTXMScript, FileIndexer
+from parser import getFilePaths
+
 
 def main():
     # Dictionaries done thanks to the parsing of the txt microscope script:
@@ -68,17 +69,37 @@ def main():
          'angle': 5, 'repetition': 5, 'FF': True}]
     """
 
-    parser = ParserTXMScript()
-    indexer = FileIndexer()
+    #parser = ParserTXMScript()
+    #collected_images = parser.parse_script("many_folder.txt")
+
+
+
+    Files = Query()
+    query_impl = ((Files.energy > 400) & (Files.energy <= 500) & (Files.angle > -15) & (Files.angle <= 100))
+    files = getFilePaths("many_folder.txt", query_impl, only_existing=True) #, root_path="/home/mrosanes/PycharmProjects/txmparser/rootfolder")
+    for i in files:
+        print(i)
+        print("\n")
+
+
+
+
+
+
+
     
-    collected_images = parser.parse_script("many_folder.txt")
+
+    
+    """
+    #& (Files.angle > -10) & (Files.angle <= 0))
+
     #prettyprinter = pprint.PrettyPrinter(indent=4)
     #prettyprinter.pprint(collected_images)
+    
+    #print(found_files)
 
-    db = TinyDB('db.json') 
-    db.purge()
-    db.insert_multiple(collected_images)
-    Files = Query()
+    #print(found_files)
+    
     #found_files = db.search((Files.energy == 500))
     #found_files = db.search((Files.energy == 425) & (Files.FF == True) &
     #                        (Files.angle > -10) & (Files.angle <= 0))
@@ -87,14 +108,6 @@ def main():
     #found_files = db.search((Files.FF == True) &
     #                        (Files.energy > 350) & (Files.energy <= 450)) 
     
-    found_files = db.search((Files.energy > 400) & (Files.energy <= 500) &
-                            (Files.angle > -15) & (Files.angle <= 100))
-    #& (Files.angle > -10) & (Files.angle <= 0))
-    #print(found_files)
-
-    #print(found_files)
-
-
     from operator import itemgetter
     # Used to organize numbers in increasing or decreasing order
     result = sorted(found_files, key=itemgetter('energy'), reverse=False)
@@ -105,15 +118,12 @@ def main():
         pass
         #print(entry["filename"])
         #print(entry["subfolder"])
-
-    
-
-    
+        
     root_folder = "/home/mrosanes/PycharmProjects/txmparser/rootfolder"
     query = result
     #print(query)
     
-    file_paths = indexer.getFilePaths(root_folder, query, False) #False) #True#)   
+    file_paths = indexer.getFilePaths(root_folder, query, True) #False) #True#)   
     for file_path in file_paths:
         print("\n")
         print(file_path)
@@ -142,6 +152,7 @@ def main():
     #with open('db.json') as data_file:
     #    data = json.load(data_file)
     #print(data)
+    """
 
 if __name__ == "__main__":
     main()
