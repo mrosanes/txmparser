@@ -230,14 +230,11 @@ def getFilePaths(txm_txt_script, query_impl, root_path=None,
         files = _getPathsFromQuery(root_path, query_output)
     else:
         files = _getPathsFromRoot(root_path, query_output)
-        
+            
     # Filter existing files
     if only_existing:
-        only_exisiting_files = []
-        for complete_file in files:
-            if os.path.isfile(complete_file):
-                only_exisiting_files.append(complete_file)
-        files = only_exisiting_files
+        files = filter(os.path.isfile, files)  
+
     return files
 
 
