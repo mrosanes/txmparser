@@ -158,10 +158,12 @@ class ParserTXMScript(object):
         return self.collected_files
                 
 
-def _getDB(db_full_path, txm_txt_script):
-    if os.path.isfile(db_full_path):
+def _getDB(db_full_path, txm_txt_script, use_existing_db=True):
+    if os.path.isfile(db_full_path) and use_existing_db:
+        print("\nUsing existing files db\n")
         db = TinyDB(db_full_path)
     else:
+        print("\nCreating files db\n")
         db = TinyDB(db_full_path)
         db.purge()
         parser = ParserTXMScript()
@@ -184,21 +186,28 @@ def _getPathsFromRoot(root_path, query_output):
 
 def _getPathsFromQuery(root_path, query_output):
     files = []
-    for entry in query_output:
-        filename = entry["filename"]
-        subfolder = entry["subfolder"]
-        complete_file = os.path.join(root_path, subfolder, filename)
-        files.append(complete_file)
+    try:
+        for entry in query_output:
+            filename = entry["filename"]
+            subfolder = entry["subfolder"]
+            complete_file = os.path.join(root_path, subfolder, filename)
+            files.append(complete_file)
+    except:
+        print("WARNING: Subfolders are not specified in txt TXM script: "
+              "they should be specified. \n" 
+              "Fallback: Performing generic search in the superfolder.\n")
+        files = _getPathsFromRoot(root_path, query_output)
     return files
 
 
-def search(txm_txt_script, query_impl, db_name='index.json', orderby=None):
+def search(txm_txt_script, query_impl, db_name='index.json', orderby=None,
+           use_existing_db=True):
     root_path = os.path.dirname(os.path.abspath(txm_txt_script))
     if not os.path.isfile(txm_txt_script):
         raise Exception('txt file does not exist in {0}'.format(root_path))
     
     db_full_path = os.path.join(root_path, db_name)    
-    db = _getDB(db_full_path, txm_txt_script)
+    db = _getDB(db_full_path, txm_txt_script, use_existing_db=use_existing_db)
     query_output = db.search(query_impl)    
     db.close()
     
@@ -207,7 +216,8 @@ def search(txm_txt_script, query_impl, db_name='index.json', orderby=None):
 
 
 def getFilePaths(txm_txt_script, query_impl, root_path=None, 
-                 only_existing=True, use_subfolders=True):
+                 only_existing=True, use_subfolders=True,
+                 use_existing_db=True):
     # root_path is the super folder where raw data xrm files are located
     if root_path:
         # copy txm_txt_script to root_path
@@ -223,7 +233,8 @@ def getFilePaths(txm_txt_script, query_impl, root_path=None,
         root_path = os.path.dirname(os.path.abspath(txm_txt_script))
     
     # Search
-    query_output = search(txm_txt_script, query_impl)
+    query_output = search(txm_txt_script, query_impl, 
+                          use_existing_db=use_existing_db)
     
     # Get getFilePaths
     if use_subfolders:
