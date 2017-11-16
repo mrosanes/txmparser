@@ -247,8 +247,7 @@ def move_txm_script_and_search(txm_txt_script, query_impl, root_path=None,
     else:
         root_path = os.path.dirname(os.path.abspath(txm_txt_script))
 
-    query_output = search(txm_txt_script, query_impl,
-                          root_path=root_path, db_name=db_name,
+    query_output = search(txm_txt_script, query_impl, db_name=db_name,
                           orderby=orderby, use_existing_db=use_existing_db)
     return query_output
 
