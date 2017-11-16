@@ -20,7 +20,7 @@
 
 
 from tinydb import TinyDB, Query, where
-from parser import getFilePaths
+from parser import get_file_paths, move_search_and_get_file_paths, search, move_txm_script_and_search, get_file_paths
 
 
 def main():
@@ -72,23 +72,39 @@ def main():
     #parser = ParserTXMScript()
     #collected_images = parser.parse_script("many_folder.txt")
 
-
-
     Files = Query()
-    query_impl = ((Files.energy > 400) & (Files.energy <= 500) & (Files.angle > -15) & (Files.angle <= 100))
-    files = getFilePaths("many_folder.txt", query_impl, only_existing=True, use_subfolders=True)#, root_path="/home/mrosanes/PycharmProjects/txmparser/rootfolder")
-    for i in files:
+    query_impl = ((Files.energy > 400) & (Files.energy <= 600) &
+                  (Files.angle > -100) & (Files.angle <= 100))
+
+    #query_output = search("many_22.txt", query_impl, use_existing_db=False)
+
+
+    #queryoutput, _ = search("many_22.txt", query_impl, use_existing_db=False)
+
+    #print(queryoutput)
+    #files = move_search_and_get_file_paths("many_folder.txt", query_impl, use_existing_db=False, only_existing_files=True)
+                                     # root_path=None)
+
+                              #db_name='index.json', use_existing_db=True)
+
+    #print(files)
+    #files = getFilePaths("many_2.txt", query_impl, only_existing=False, use_subfolders=True, use_existing_db=False) # root_path="/home/mrosanes/PycharmProjects/txmparser/rootfolder")
+    #for i in files:
+    #    print(i)
+    #    print("\n")
+
+
+
+
+    query_output = move_txm_script_and_search("many_folder.txt", query_impl, use_existing_db=False)
+
+    for i in query_output:
         print(i)
         print("\n")
-
-
-
-
-
-
-
     
-
+    files = get_file_paths(query_output, root_path= "/home/mrosanes/PycharmProjects/txmparser/rootfolder", use_subfolders=True, only_existing_files=False
+                           )
+    print files
     
     """
     #& (Files.angle > -10) & (Files.angle <= 0))
