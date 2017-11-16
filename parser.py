@@ -158,7 +158,6 @@ class ParserTXMScript(object):
         return self.collected_files
                 
 
-
 def _move_txm_script_to_root(txm_txt_script, root_path):
     # Copy txm_txt_script to root_path and return the absolute
     # path + filename"""
@@ -202,9 +201,6 @@ def getDB(txm_txt_script, root_path=None, db_name='index.json',
         collected_images = parser.parse_script(txm_txt_script)
         db.insert_multiple(collected_images)
     return db, root_path
-
-
-
 
 
 def _get_paths_from_root(root_path, query_output):
