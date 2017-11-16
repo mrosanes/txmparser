@@ -173,8 +173,11 @@ def _getDB(db_full_path, txm_txt_script, use_existing_db=True):
     return db
 
 
-def _getPathsFromRoot(root_path, query_output):
+def _get_paths_from_root(root_path, query_output):
+    """ Get the paths of the queried files by looking in the root folder and
+    all subfolders inside the root folder containing the data files"""
     files = []
+    print(root_path)
     for entry in query_output:
         for dir,_,_ in os.walk(root_path):
             files.extend(glob(os.path.join(dir, entry["filename"])))
@@ -184,7 +187,9 @@ def _getPathsFromRoot(root_path, query_output):
     return files
 
 
-def _getPathsFromQuery(root_path, query_output):
+def _get_paths_from_subfolders(root_path, query_output):
+    """ Get the paths of the queried files by looking in the subfolders
+    indicated by the query"""
     files = []
     try:
         for entry in query_output:
@@ -195,17 +200,36 @@ def _getPathsFromQuery(root_path, query_output):
     except:
         print("WARNING: Subfolders are not specified in txt TXM script: "
               "they should be specified. \n" 
-              "Fallback: Performing generic search in the superfolder.\n")
-        files = _getPathsFromRoot(root_path, query_output)
+              "Fallback: Performing generic search in the root folder.\n")
+        files = _get_paths_from_root(root_path, query_output)
     return files
 
 
-def search(txm_txt_script, query_impl, db_name='index.json', orderby=None,
-           use_existing_db=True):
+def move_txm_script_to_root(txm_txt_script, root_path):
+    # Copy txm_txt_script to root_path and return the absolute
+    # path + filename"""
+    try:
+        #root_path is the super folder where raw data xrm files are located.
+        #TXM txt script should be located there."""
+        fname_txm_script = os.path.basename(txm_txt_script)
+        dst = os.path.join(root_path, fname_txm_script)
+        copyfile(txm_txt_script, dst)
+        txm_script_basename = os.path.basename(txm_txt_script)
+        txm_txt_script = os.path.join(root_path, txm_script_basename)
+        return txm_txt_script
+    except:
+        raise Exception("File txt already exists in root path")
+
+
+def search(txm_txt_script, query_impl, db_name='index.json',
+           use_existing_db=True, orderby=None):
+    """Perform a query and return the query output"""
+
     root_path = os.path.dirname(os.path.abspath(txm_txt_script))
     if not os.path.isfile(txm_txt_script):
-        raise Exception('txt file does not exist in {0}'.format(root_path))
-    
+        raise Exception('TXM txt script does not '
+                        'exist in {0}'.format(root_path))
+
     db_full_path = os.path.join(root_path, db_name)    
     db = _getDB(db_full_path, txm_txt_script, use_existing_db=use_existing_db)
     query_output = db.search(query_impl)    
@@ -215,38 +239,51 @@ def search(txm_txt_script, query_impl, db_name='index.json', orderby=None,
     return query_output
 
 
-def getFilePaths(txm_txt_script, query_impl, root_path=None, 
-                 only_existing=True, use_subfolders=True,
-                 use_existing_db=True):
-    # root_path is the super folder where raw data xrm files are located
+def move_txm_script_and_search(txm_txt_script, query_impl, root_path=None,
+                               db_name='index.json', use_existing_db=True,
+                               orderby=None):
     if root_path:
-        # copy txm_txt_script to root_path
-        try:
-            fname_txm_script = os.path.basename(txm_txt_script)
-            dst = os.path.join(root_path, fname_txm_script) 
-            copyfile(txm_txt_script, dst)
-            txm_script_basename = os.path.basename(txm_txt_script)
-            txm_txt_script = os.path.join(root_path, txm_script_basename)
-        except:
-            raise Exception("File txt already exists in root path")
+        move_txm_script_to_root(txm_txt_script, root_path)
     else:
         root_path = os.path.dirname(os.path.abspath(txm_txt_script))
-    
-    # Search
-    query_output = search(txm_txt_script, query_impl, 
-                          use_existing_db=use_existing_db)
-    
+
+    query_output = search(txm_txt_script, query_impl,
+                          root_path=root_path, db_name=db_name,
+                          orderby=orderby, use_existing_db=use_existing_db)
+    return query_output
+
+
+def get_file_paths(query_output, root_path, use_subfolders=True,
+                   only_existing_files=True):
+    """Perform a query and return the query and get the paths of the files
+    returned by the query"""
+
     # Get getFilePaths
     if use_subfolders:
-        files = _getPathsFromQuery(root_path, query_output)
+        files = _get_paths_from_subfolders(root_path, query_output)
     else:
-        files = _getPathsFromRoot(root_path, query_output)
-            
+        files = _get_paths_from_root(root_path, query_output)
+
     # Filter existing files
-    if only_existing:
-        files = filter(os.path.isfile, files)  
+    if only_existing_files:
+        files = filter(os.path.isfile, files)
 
     return files
+
+
+def move_search_and_get_file_paths(txm_txt_script, query_impl, root_path=None,
+                                   db_name='index.json', use_existing_db=True,
+                                   only_existing_files=True, orderby=None):
+    if root_path:
+        move_txm_script_to_root(txm_txt_script, root_path)
+    else:
+        root_path = os.path.dirname(os.path.abspath(txm_txt_script))
+    query_output = search(txm_txt_script, query_impl, db_name=db_name,
+                          orderby=orderby, use_existing_db=use_existing_db)
+    files = get_file_paths(query_output, root_path, use_subfolders=True,
+                           only_existing_files=only_existing_files)
+    return files
+
 
 
 def main():
