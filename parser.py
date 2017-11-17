@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import copy
 import pprint
-from shutil import copyfile
+from shutil import copy2
 from glob import glob
 from tinydb import TinyDB
 
@@ -158,52 +158,29 @@ class ParserTXMScript(object):
         return self.collected_files
                 
 
-def _move_txm_script_to_root(txm_txt_script, root_path,
-                             overwrite_txm_script=True):
-    # Copy txm_txt_script to root_path and return the absolute
-    # path + filename"""
-
-    # root_path is the super folder where raw data xrm files are located.
-    # TXM txt script should be located there."""
-
-    fname_txm_script = os.path.basename(txm_txt_script)
-    destination = os.path.join(root_path, fname_txm_script)
-
-    if os.path.exists(destination) and not overwrite_txm_script:
-        raise Exception("TXM txt script already exists in root path.")
-    else:
-        copyfile(txm_txt_script, destination)
-
-    
-def get_db(txm_txt_script, root_path=None, db_name='index.json',
-           use_existing_db=False, overwrite_txm_script=True):
+def get_db(txm_txt_script, use_existing_db=False):
     """Get the data files DataBase if exisiting, or create the DataBase
     if not existing yet or if the creation is specified explicitely"""
-    
-    # root_path: root folder inside which the raw data files are organized 
-    # in subfolders.
-    
+
     if not os.path.isfile(txm_txt_script):
         raise Exception('TXM txt script does not exist')
 
-    if not root_path:
-        root_path = os.path.dirname(os.path.abspath(txm_txt_script))
-        
-    db_full_path = os.path.join(root_path, db_name) 
+    # root_path: folder in which raw data files are organized in subfolders.
+    root_path = os.path.dirname(os.path.abspath(txm_txt_script))
+
+    db_name = 'index.json'
+    db_full_path = os.path.join(root_path, db_name)
     if os.path.isfile(db_full_path) and use_existing_db:
         print("\nUsing existing files DataBase\n")
         db = TinyDB(db_full_path)
     else:
         print("\nCreating files DataBase\n")
-        if root_path:
-            _move_txm_script_to_root(txm_txt_script, root_path,
-                                     overwrite_txm_script=overwrite_txm_script)
         db = TinyDB(db_full_path)
         db.purge()
         parser = ParserTXMScript()
         collected_images = parser.parse_script(txm_txt_script)
         db.insert_multiple(collected_images)
-    return db, root_path
+    return db
 
 
 def _get_paths_from_root(root_path, query_output):
@@ -242,24 +219,20 @@ def get_file_paths(query_output, root_path, use_subfolders=True,
     # Get getFilePaths
     if use_subfolders:
         files = _get_paths_from_subfolders(root_path, query_output)
+        # Filter existing files
+        if only_existing_files:
+            files = filter(os.path.isfile, files)
     else:
         files = _get_paths_from_root(root_path, query_output)
-
-    # Filter existing files
-    if only_existing_files:
-        files = filter(os.path.isfile, files)
 
     return files
 
 
-def search_and_get_file_paths(txm_txt_script, query_impl, root_path=None,
+def search_and_get_file_paths(txm_txt_script, query_impl,
                               use_subfolders=True, only_existing_files=True, 
-                              use_existing_db=False, db_name='index.json',
-                              overwrite_txm_script=True):
-
-    db, root_path = get_db(txm_txt_script, root_path=root_path,
-                           db_name=db_name, use_existing_db=use_existing_db,
-                           overwrite_txm_script=overwrite_txm_script)
+                              use_existing_db=False):
+    root_path = os.path.dirname(os.path.abspath(txm_txt_script))
+    db = get_db(txm_txt_script, use_existing_db=use_existing_db)
     query_output = db.search(query_impl)
     files = get_file_paths(query_output, root_path, 
                            use_subfolders=use_subfolders,
