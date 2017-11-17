@@ -20,62 +20,103 @@
 
 
 from tinydb import TinyDB, Query, where
-from parser import get_file_paths, move_search_and_get_file_paths, search, move_txm_script_and_search, get_file_paths
+from parser import get_db, get_file_paths, search_and_get_file_paths
 
 
 def main():
     # Dictionaries done thanks to the parsing of the txt microscope script:
 
     """
-    ars = [{'filename': "1.xrm", 'sample': 'tomo1', 'zp': 3, 'energy': 740,
+    query_output_example = 
+       [{'filename': "1.xrm", 'sample': 'tomo1', 'zp': 3, 'energy': 740,
          'angle': 30, 'repetition': 1, 'FF': False},
         {'filename': "2.xrm", 'sample': 'tomo1', 'zp': 3, 'energy': 520,
          'angle': 40, 'repetition': 2, 'FF': False},
         {'filename': "3.xrm", 'sample': 'tomo1', 'zp': 5, 'energy': 520,
-         'angle': 50, 'repetition': 3, 'FF': False},
-        {'filename': "4.xrm", 'sample': 'tomo1', 'zp': 5, 'energy': 740,
-         'angle': 60, 'repetition': 4, 'FF': False},
-        {'filename': "5.xrm", 'sample': 'tomo1', 'zp': 7, 'energy': 520,
-         'angle': 450, 'repetition': 5, 'FF': False},
-        {'filename': "6.xrm", 'sample': 'tomo1', 'zp': 3, 'energy': 520,
-         'angle': 300, 'repetition': 1, 'FF': False},
-        {'filename': "7.xrm", 'sample': 'tomo1', 'zp': 3, 'energy': 520,
-         'angle': 4000, 'repetition': 2, 'FF': False},
-        {'filename': "8.xrm", 'sample': 'tomo1', 'zp': 5, 'energy': 520,
-         'angle': 50000, 'repetition': 3, 'FF': False},
-        {'filename': "9.xrm", 'sample': 'tomo1', 'zp': 5, 'energy': 520,
-         'angle': 6000000000, 'repetition': 4, 'FF': False},
-        {'filename': "10.xrm", 'sample': 'tomo1', 'zp': 7, 'energy': 520,
-         'angle': 5000, 'repetition': 5, 'FF': False},
-        {'filename': "11.xrm", 'sample': 'tomo1', 'zp': 3, 'energy': 520,
-         'angle': 3000000, 'repetition': 1, 'FF': False},
-        {'filename': "12.xrm", 'sample': 'tomo1', 'zp': 3, 'energy': 520,
-         'angle': 400, 'repetition': 2, 'FF': False},
-        {'filename': "13.xrm", 'sample': 'tomo1', 'zp': 5, 'energy': 520,
-         'angle': 50000, 'repetition': 3, 'FF': False},
-        {'filename': "14.xrm", 'sample': 'tomo1', 'zp': 5, 'energy': 520,
-         'angle': 6000, 'repetition': 4, 'FF': False},
-        {'filename': "15.xrm", 'sample': 'tomo1', 'zp': 7, 'energy': 520,
-         'angle': 500, 'repetition': 5, 'FF': False},
-        {'filename': "16.xrm", 'sample': 'tomo1', 'zp': 3, 'energy': 740,
-         'angle': 3, 'repetition': 1, 'FF': False},
-        {'filename': "17.xrm", 'sample': 'tomo1', 'zp': 3, 'energy': 520,
-         'angle': 4, 'repetition': 2, 'FF': False},
-        {'filename': "18.xrm", 'sample': 'tomo1', 'zp': 5, 'energy': 520,
-         'angle': 5, 'repetition': 3, 'FF': True},
-        {'filename': "19.xrm", 'sample': 'tomo1', 'zp': 5, 'energy': 740,
-         'angle': 6, 'repetition': 4, 'FF': True},
-        {'filename': "20.xrm", 'sample': 'tomo1', 'zp': 7, 'energy': 520,
-         'angle': 5, 'repetition': 5, 'FF': True}]
+         'angle': 50, 'repetition': 3, 'FF': False}]
     """
 
-    #parser = ParserTXMScript()
-    #collected_images = parser.parse_script("many_folder.txt")
 
     Files = Query()
     query_impl = ((Files.energy > 400) & (Files.energy <= 600) &
-                  (Files.angle > -100) & (Files.angle <= 100))
+                  (Files.angle > -3) & (Files.angle <= 3))
 
+ 
+
+    #db_one, root_path = get_db("many_folder.txt", root_path="/home/mrosanes/PycharmProjects/txmparser/rootfolder", db_name='index.json',
+    #                          use_existing_db=False, overwrite_txm_script=True)
+    #query_output = db_one.search(query_impl)
+    
+    #for i in query_output:
+    #    print(i)
+    #    print("\n")
+    #print(root_path)
+    
+    
+    #files = get_file_paths(query_output, root_path, use_subfolders=False,
+    #               only_existing_files=True)
+    #for i in files:
+        #print(i)
+        #print("\n") 
+    
+    
+    files = search_and_get_file_paths("many_folder.txt", query_impl, root_path="/home/mrosanes/PycharmProjects/txmparser/rootfolder",
+                              use_subfolders=False, only_existing_files=False, 
+                              use_existing_db=False, db_name='index.json', overwrite_txm_script=False)
+    
+    for i in files:
+        print(i)
+        print("\n")
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     #query_output = search("many_22.txt", query_impl, use_existing_db=False)
 
 
@@ -93,18 +134,14 @@ def main():
     #    print(i)
     #    print("\n")
 
-
-
-
-    query_output = move_txm_script_and_search("many_folder.txt", query_impl, use_existing_db=False)
-
-    for i in query_output:
-        print(i)
-        print("\n")
-    
-    files = get_file_paths(query_output, root_path= "/home/mrosanes/PycharmProjects/txmparser/rootfolder", use_subfolders=True, only_existing_files=False
-                           )
-    print files
+        
+        
+        
+        
+        
+        
+    #files = get_file_paths(query_output, root_path= "/home/mrosanes/PycharmProjects/txmparser/rootfolder", use_subfolders=True, only_existing_files=False)
+    #print files
     
     """
     #& (Files.angle > -10) & (Files.angle <= 0))
