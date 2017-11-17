@@ -18,7 +18,7 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
-
+import os
 from tinydb import TinyDB, Query, where
 from parser import get_db, get_file_paths, search_and_get_file_paths
 
@@ -41,32 +41,39 @@ def main():
     query_impl = ((Files.energy > 400) & (Files.energy <= 600) &
                   (Files.angle > -3) & (Files.angle <= 3))
 
- 
-
-    #db_one, root_path = get_db("many_folder.txt", root_path="/home/mrosanes/PycharmProjects/txmparser/rootfolder", db_name='index.json',
-    #                          use_existing_db=False, overwrite_txm_script=True)
+    
+    txm_txt_script = "many_folder.txt"
+    
+    #db_one = get_db(txm_txt_script, use_existing_db=True)
     #query_output = db_one.search(query_impl)
     
     #for i in query_output:
     #    print(i)
-    #    print("\n")
-    #print(root_path)
+    #    print("\n") 
     
     
+    
+    
+    #root_path = os.path.dirname(os.path.abspath(index_fn))
     #files = get_file_paths(query_output, root_path, use_subfolders=False,
-    #               only_existing_files=True)
-    #for i in files:
-        #print(i)
-        #print("\n") 
-    
-    
-    files = search_and_get_file_paths("many_folder.txt", query_impl, root_path="/home/mrosanes/PycharmProjects/txmparser/rootfolder",
-                              use_subfolders=False, only_existing_files=False, 
-                              use_existing_db=False, db_name='index.json', overwrite_txm_script=False)
-    
+    #                       only_existing_files=False)
+     
+
+        
+    files = search_and_get_file_paths(txm_txt_script, query_impl,
+                                      use_existing_db=True,
+                                      use_subfolders=True, 
+                                      only_existing_files=False)
+                  
+        
+
     for i in files:
         print(i)
-        print("\n")
+        print("\n")  
+        
+        
+        
+ 
         
         
         
@@ -76,82 +83,22 @@ def main():
         
         
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    #query_output = search("many_22.txt", query_impl, use_existing_db=False)
+  
 
 
-    #queryoutput, _ = search("many_22.txt", query_impl, use_existing_db=False)
-
-    #print(queryoutput)
-    #files = move_search_and_get_file_paths("many_folder.txt", query_impl, use_existing_db=False, only_existing_files=True)
-                                     # root_path=None)
-
-                              #db_name='index.json', use_existing_db=True)
-
-    #print(files)
-    #files = getFilePaths("many_2.txt", query_impl, only_existing=False, use_subfolders=True, use_existing_db=False) # root_path="/home/mrosanes/PycharmProjects/txmparser/rootfolder")
-    #for i in files:
-    #    print(i)
-    #    print("\n")
-
         
         
         
         
         
         
-    #files = get_file_paths(query_output, root_path= "/home/mrosanes/PycharmProjects/txmparser/rootfolder", use_subfolders=True, only_existing_files=False)
-    #print files
-    
+   
     """
-    #& (Files.angle > -10) & (Files.angle <= 0))
 
     #prettyprinter = pprint.PrettyPrinter(indent=4)
     #prettyprinter.pprint(collected_images)
     
-    #print(found_files)
-
-    #print(found_files)
+   
     
     #found_files = db.search((Files.energy == 500))
     #found_files = db.search((Files.energy == 425) & (Files.FF == True) &
@@ -182,9 +129,6 @@ def main():
         print(file_path)
     
     found2 = db.search(Files.zpz < 1)
-    #print(found2)
-    
-    
     found3 = db.search(Files.zp.exists())
     #print(found3)
     
@@ -192,14 +136,12 @@ def main():
     zpz_all_files = [] 
     for entry in res2:
         pass
-        #try:
-            
         #print(entry["zpz"])
     
     
     for entry in result:
         pass
-        #print(entry["filename"])
+
     db.close()
     
     #with open('db.json') as data_file:
