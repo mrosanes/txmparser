@@ -185,11 +185,8 @@ def get_db(txm_txt_script, root_path=None, db_name='index.json',
     
     if not os.path.isfile(txm_txt_script):
         raise Exception('TXM txt script does not exist')
-    
-    if root_path:
-        _move_txm_script_to_root(txm_txt_script, root_path,
-                                 overwrite_txm_script=overwrite_txm_script)
-    else:
+
+    if not root_path:
         root_path = os.path.dirname(os.path.abspath(txm_txt_script))
         
     db_full_path = os.path.join(root_path, db_name) 
@@ -198,6 +195,9 @@ def get_db(txm_txt_script, root_path=None, db_name='index.json',
         db = TinyDB(db_full_path)
     else:
         print("\nCreating files DataBase\n")
+        if root_path:
+            _move_txm_script_to_root(txm_txt_script, root_path,
+                                     overwrite_txm_script=overwrite_txm_script)
         db = TinyDB(db_full_path)
         db.purge()
         parser = ParserTXMScript()
