@@ -63,11 +63,6 @@ def main():
     all_file_records = db.all()
     #print(all_file_records[0])
     Files = Query()
-
-    energies_from_all_files = [record["energy"] for record in all_file_records]
-    energies_exisiting = sorted(set(energies_from_all_files))
-    print(energies_exisiting)
-    print("\n")
     
     dates_samples_energies = []
     for record in all_file_records:
