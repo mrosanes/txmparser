@@ -75,7 +75,7 @@ class ParserTXMScript(object):
         """Subfolder where the raw data file should be located"""
         # The repetition must not be reset in this case
         word_list = line.split()
-        self.subfolder = word_list[-1]
+        self.subfolder = str(int(round(float(word_list[-1]))))
         self.parameters['subfolder'] = self.subfolder
         
     def is_FF(self):
