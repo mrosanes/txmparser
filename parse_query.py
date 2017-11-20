@@ -19,6 +19,7 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import os
+import pprint
 from tinydb import TinyDB, Query, where
 from parser import get_db, get_file_paths, search_and_get_file_paths
 
@@ -36,21 +37,86 @@ def main():
          'angle': 50, 'repetition': 3, 'FF': False}]
     """
 
+    prettyprinter = pprint.PrettyPrinter(indent=4)
 
     Files = Query()
-    query_impl = ((Files.energy > 400) & (Files.energy <= 600) &
-                  (Files.angle > -3) & (Files.angle <= 3))
+    query_impl = ((Files.energy > -100) & (Files.energy <= 800) &
+                  (Files.angle > -360) & (Files.angle <= 360))
 
     
-    txm_txt_script = "many_folder.txt"
+    #txm_txt_script = "many_folder.txt"
+    txm_txt_script = "txm_script_1.txt"
+    root_path = os.path.dirname(os.path.abspath(txm_txt_script))
     
-    #db_one = get_db(txm_txt_script, use_existing_db=True)
-    #query_output = db_one.search(query_impl)
+    db = get_db(txm_txt_script, use_existing_db=False)
+    #query_output = db.search(query_impl)
     
     #for i in query_output:
     #    print(i)
     #    print("\n") 
     
+    
+     
+    
+    all_file_records = db.all()
+    print(all_file_records[0])
+    
+    zps_from_all_files = [record["zpz"] for record in all_file_records]
+    zpz_different_positions = sorted(set(zps_from_all_files))
+    print(zpz_different_positions)
+    print("\n")
+    
+    
+    dates_samples_energies = []
+    for record in all_file_records:
+        dates_samples_energies.append(record["sample"] + "_" + 
+                                   str(record["date"]) + "_" + 
+                                   str(record["energy"]))
+                                                      
+    dates_samples_energies = list(set(dates_samples_energies))
+    
+    print(dates_samples_energies)
+    print("\n")
+    
+    
+    files_by_zp = {}
+    files_for_sample_subdict = {}
+    files_for_sample = {}
+
+    for date_sample_energie in dates_samples_energies:
+        for zpz in zpz_different_positions:
+            query_impl = ((Files.zpz == zpz) & (Files.FF == False))
+            query_output = db.search(query_impl) 
+            
+            files = get_file_paths(query_output, root_path, use_subfolders=True,
+                                only_existing_files=False)       
+            files_by_zp[zpz] = files
+            
+        
+        # Get FF image records
+        query_impl = (Files.FF == True)
+        query_output = db.search(query_impl)    
+        files_FF = get_file_paths(query_output, root_path, use_subfolders=True,
+                            only_existing_files=False)    
+            
+        
+        
+        files_for_sample_subdict['tomos'] = files_by_zp
+        files_for_sample_subdict['ff'] = files_FF
+        files_for_sample[date_sample_energie] = files_for_sample_subdict
+    
+    #files_for_sample[]
+        
+        
+   
+    prettyprinter.pprint(files_for_sample)
+    
+    
+    
+    
+    
+    
+    """
     
     
     
@@ -59,18 +125,21 @@ def main():
     #                       only_existing_files=False)
      
 
-        
+    """    
+    
+    """
     files = search_and_get_file_paths(txm_txt_script, query_impl,
                                       use_existing_db=True,
                                       use_subfolders=True, 
                                       only_existing_files=False)
-                  
+    """             
         
 
-    for i in files:
-        print(i)
-        print("\n")  
-        
+    """
+    #for i in files:
+    #    print(i)
+    #    print("\n")  
+    """    
         
         
  
@@ -95,7 +164,7 @@ def main():
    
     """
 
-    #prettyprinter = pprint.PrettyPrinter(indent=4)
+
     #prettyprinter.pprint(collected_images)
     
    
@@ -119,14 +188,6 @@ def main():
         #print(entry["filename"])
         #print(entry["subfolder"])
         
-    root_folder = "/home/mrosanes/PycharmProjects/txmparser/rootfolder"
-    query = result
-    #print(query)
-    
-    file_paths = indexer.getFilePaths(root_folder, query, True) #False) #True#)   
-    for file_path in file_paths:
-        print("\n")
-        print(file_path)
     
     found2 = db.search(Files.zpz < 1)
     found3 = db.search(Files.zp.exists())
