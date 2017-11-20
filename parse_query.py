@@ -20,6 +20,7 @@
 
 import os
 import pprint
+from operator import itemgetter
 from tinydb import TinyDB, Query, where
 from parser import get_db, get_file_paths, search_and_get_file_paths
 
@@ -39,13 +40,14 @@ def main():
 
     prettyprinter = pprint.PrettyPrinter(indent=4)
 
-    Files = Query()
-    query_impl = ((Files.energy > -100) & (Files.energy <= 800) &
-                  (Files.angle > -360) & (Files.angle <= 360))
+
+    #query_impl = ((Files.energy > -100) & (Files.energy <= 800) &
+    #(Files.angle > -360) & (Files.angle <= 360))
 
     
     #txm_txt_script = "many_folder.txt"
-    txm_txt_script = "txm_script_1.txt"
+    #txm_txt_script = "txm_script_1.txt"
+    txm_txt_script = "txm_script_2.txt"
     root_path = os.path.dirname(os.path.abspath(txm_txt_script))
     
     db = get_db(txm_txt_script, use_existing_db=False)
@@ -59,57 +61,72 @@ def main():
      
     
     all_file_records = db.all()
-    print(all_file_records[0])
-    
-    zps_from_all_files = [record["zpz"] for record in all_file_records]
-    zpz_different_positions = sorted(set(zps_from_all_files))
-    print(zpz_different_positions)
+    #print(all_file_records[0])
+    Files = Query()
+
+    energies_from_all_files = [record["energy"] for record in all_file_records]
+    energies_exisiting = sorted(set(energies_from_all_files))
+    print(energies_exisiting)
     print("\n")
-    
     
     dates_samples_energies = []
     for record in all_file_records:
         dates_samples_energies.append(record["sample"] + "_" + 
-                                   str(record["date"]) + "_" + 
-                                   str(record["energy"]))
-                                                      
+                                      str(record["date"]) + "_" + 
+                                      str(record["energy"]))                         
     dates_samples_energies = list(set(dates_samples_energies))
     
     print(dates_samples_energies)
     print("\n")
     
     
-    files_by_zp = {}
-    files_for_sample_subdict = {}
-    files_for_sample = {}
+
+    many_tomos_experiment_files = {}
 
     for date_sample_energie in dates_samples_energies:
-        for zpz in zpz_different_positions:
-            query_impl = ((Files.zpz == zpz) & (Files.FF == False))
-            query_output = db.search(query_impl) 
+        print(date_sample_energie)
+        files_by_zp = {}
+        files_for_sample_subdict = {}
+
+        energy = date_sample_energie.split('_')[-1]
+        energy = float(energy)
+        query_impl = (Files.energy == energy)
+        records_by_given_energy = db.search(query_impl)
+
+        zps_for_given_energy = [record["zpz"] for record in 
+                                records_by_given_energy]
+        zpz_positions_for_given_energy = sorted(set(zps_for_given_energy))     
+        
+        for zpz in zpz_positions_for_given_energy:
+            query_impl = ((Files.energy == energy) & (Files.zpz == zpz) & 
+                          (Files.FF == False))
+            fn_by_zpz_query = db.search(query_impl)
+            sorted_fn_by_zpz_query = sorted(fn_by_zpz_query, 
+                                            key=itemgetter('angle'))
             
-            files = get_file_paths(query_output, root_path, use_subfolders=True,
-                                only_existing_files=False)       
+            files = get_file_paths(sorted_fn_by_zpz_query, root_path, 
+                                   use_subfolders=True,
+                                   only_existing_files=False)       
             files_by_zp[zpz] = files
             
-        
         # Get FF image records
-        query_impl = (Files.FF == True)
-        query_output = db.search(query_impl)    
-        files_FF = get_file_paths(query_output, root_path, use_subfolders=True,
-                            only_existing_files=False)    
+        fn_ff_query_by_energy = ((Files.energy == energy) & 
+                                 (Files.FF == True))
+        query_output = db.search(fn_ff_query_by_energy)    
+        files_FF = get_file_paths(query_output, root_path, 
+                                  use_subfolders=True,
+                                  only_existing_files=False)    
             
-        
-        
         files_for_sample_subdict['tomos'] = files_by_zp
         files_for_sample_subdict['ff'] = files_FF
-        files_for_sample[date_sample_energie] = files_for_sample_subdict
+        many_tomos_experiment_files[date_sample_energie] = files_for_sample_subdict
+
     
     #files_for_sample[]
         
         
    
-    prettyprinter.pprint(files_for_sample)
+    prettyprinter.pprint(many_tomos_experiment_files)
     
     
     
